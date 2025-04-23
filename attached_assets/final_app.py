@@ -191,38 +191,93 @@ if top_stocks and len(top_stocks) > 0:
 # Real-time stock notification bar (use session state for rendering)
 st.subheader("🔔 Real-time Market Movers")
 
-# Create notification bar with the current stocks
-notification_html = '<div class="notification-bar">'
+# Extract timestamp from the most recent stock data
+if st.session_state.top_stocks and 'timestamp' in st.session_state.top_stocks[0]:
+    update_time = st.session_state.top_stocks[0]['timestamp']
+    # Format it if it's a full datetime string 
+    if len(update_time) > 8:  # Check if it's more than just HH:MM:SS
+        try:
+            dt = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
+            update_time = dt.strftime("%H:%M:%S")
+        except:
+            # If parsing fails, just use the time as is
+            pass
+else:
+    update_time = datetime.datetime.now().strftime("%H:%M:%S")
 
-for stock in st.session_state.top_stocks:
-    # Determine signal class and styling
-    signal_class = "neutral"
+# Display update timestamp prominently at the top
+st.markdown(f"<div style='text-align:right; color:#666; margin-bottom:10px;'>Last updated: <b>{update_time}</b></div>", unsafe_allow_html=True)
+
+# Use Streamlit's built-in UI components for reliable rendering
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    stock = st.session_state.top_stocks[0]
+    signal_color = "gray"
     if stock['signal'] == 'BUY':
-        signal_class = "buy"
+        signal_color = "green"
     elif stock['signal'] == 'SELL':
-        signal_class = "sell"
+        signal_color = "red"
         
-    # Determine change styling
-    change_class = "positive" if stock.get('change_percent', 0) >= 0 else "negative"
+    change_color = "green" if stock.get('change_percent', 0) >= 0 else "red"
     change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
     
-    # Add ticker to notification bar
-    notification_html += f'''
-    <div class="stock-ticker {signal_class}">
-        <div class="ticker-name">{stock['ticker']}</div>
-        <div class="ticker-price">${stock.get('price', 0):.2f} 
-            <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
-        </div>
-        <div class="ticker-signal">Signal: {stock['signal']}</div>
-    </div>
-    '''
-    
-notification_html += '</div>'
-st.markdown(notification_html, unsafe_allow_html=True)
+    st.markdown(f"<div style='padding:10px; border-radius:5px; background-color:#2D2D2D; border-left:4px solid {signal_color};'>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center; margin:0;'>{stock['ticker']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:16px;'>${stock.get('price', 0):.2f} <span style='color:{change_color};'>{change_symbol}{stock.get('change_percent', 0):.2f}%</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:14px;'>Signal: {stock['signal']}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# Small note about auto-updates
-update_time = datetime.datetime.now().strftime("%H:%M:%S")
-st.caption(f"Last updated: {update_time} (refreshes every 10 seconds)")
+with col2:
+    stock = st.session_state.top_stocks[1]
+    signal_color = "gray"
+    if stock['signal'] == 'BUY':
+        signal_color = "green"
+    elif stock['signal'] == 'SELL':
+        signal_color = "red"
+        
+    change_color = "green" if stock.get('change_percent', 0) >= 0 else "red"
+    change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+    
+    st.markdown(f"<div style='padding:10px; border-radius:5px; background-color:#2D2D2D; border-left:4px solid {signal_color};'>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center; margin:0;'>{stock['ticker']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:16px;'>${stock.get('price', 0):.2f} <span style='color:{change_color};'>{change_symbol}{stock.get('change_percent', 0):.2f}%</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:14px;'>Signal: {stock['signal']}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with col3:
+    stock = st.session_state.top_stocks[2]
+    signal_color = "gray"
+    if stock['signal'] == 'BUY':
+        signal_color = "green"
+    elif stock['signal'] == 'SELL':
+        signal_color = "red"
+        
+    change_color = "green" if stock.get('change_percent', 0) >= 0 else "red"
+    change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+    
+    st.markdown(f"<div style='padding:10px; border-radius:5px; background-color:#2D2D2D; border-left:4px solid {signal_color};'>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center; margin:0;'>{stock['ticker']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:16px;'>${stock.get('price', 0):.2f} <span style='color:{change_color};'>{change_symbol}{stock.get('change_percent', 0):.2f}%</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:14px;'>Signal: {stock['signal']}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with col4:
+    stock = st.session_state.top_stocks[3]
+    signal_color = "gray"
+    if stock['signal'] == 'BUY':
+        signal_color = "green"
+    elif stock['signal'] == 'SELL':
+        signal_color = "red"
+        
+    change_color = "green" if stock.get('change_percent', 0) >= 0 else "red"
+    change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+    
+    st.markdown(f"<div style='padding:10px; border-radius:5px; background-color:#2D2D2D; border-left:4px solid {signal_color};'>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center; margin:0;'>{stock['ticker']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:16px;'>${stock.get('price', 0):.2f} <span style='color:{change_color};'>{change_symbol}{stock.get('change_percent', 0):.2f}%</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; font-size:14px;'>Signal: {stock['signal']}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Add a refresh button for manual refresh
 if st.button("Refresh Stocks", key="manual_refresh"):
