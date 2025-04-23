@@ -10,12 +10,6 @@ import yfinance as yf
 
 app = Flask(__name__)
 sio = socketio.Server(cors_allowed_origins='*', async_mode='eventlet')
-
-# Add a root route handler
-@app.route('/')
-def index():
-    return 'Stock WebSocket Server Running'
-
 app = socketio.WSGIApp(sio, app)
 
 connected_clients = {}
@@ -42,7 +36,7 @@ def fetch_stock_data():
     while True:
         try:
             updated_stocks = []
-            current_time = datetime.datetime.now().astimezone().strftime("%I:%M:%S %p")
+            current_time = datetime.datetime.now().strftime("%H:%M:%S")
             for ticker in top_stocks:
                 try:
                     stock = yf.Ticker(ticker)
