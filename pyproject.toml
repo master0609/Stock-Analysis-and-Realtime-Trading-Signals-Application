@@ -5,10 +5,11 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "eventlet>=0.39.1",
+    "flask-socketio>=5.5.1",
     "matplotlib>=3.10.1",
     "numpy>=2.2.5",
     "pandas>=2.2.3",
-    "python-socketio[client]>=5.13.0",
+    "python-socketio[client,server]>=5.13.0",
     "scikit-learn>=1.6.1",
     "scipy>=1.15.2",
     "socketio>=0.2.1",

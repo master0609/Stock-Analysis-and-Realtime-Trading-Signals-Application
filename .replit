@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "StockAnalysisApp"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "StockSocketServer"
+
 [[workflows.workflow]]
 name = "StockAnalysisApp"
 author = "agent"
@@ -35,6 +39,25 @@ task = "shell.exec"
 args = "streamlit run attached_assets/final_app.py --server.port 5000"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "StockSocketServer"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd server/websocket && python stock_socket_server.py"
+waitForPort = 8001
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8001
+externalPort = 3000

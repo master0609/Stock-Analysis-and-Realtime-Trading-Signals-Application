@@ -7,9 +7,14 @@ from simple_stock_analysis import analyze_stock
 import socketio
 import threading
 import time
+import json
 
-# Initialize Socket.IO client
-sio = socketio.Client()
+# Initialize Socket.IO client with client transport
+sio = socketio.Client(logger=True, engineio_logger=True)
+
+# Global variables for stock notifications
+top_stocks = []
+notification_count = 0
 
 # Set page configuration
 st.set_page_config(
@@ -18,12 +23,51 @@ st.set_page_config(
     layout="wide"
 )
 
+# Define Socket.IO event handlers
+@sio.event
+def connect():
+    print("Connected to Socket.IO server")
+    
+@sio.event
+def disconnect():
+    print("Disconnected from Socket.IO server")
+    
+@sio.on('stock_update')
+def on_stock_update(data):
+    print(f"Received stock update: {data}")
+    # Add the stock update to our list if it's not already there
+    if isinstance(data, dict) and 'ticker' in data:
+        for i, stock in enumerate(top_stocks):
+            if stock['ticker'] == data['ticker']:
+                top_stocks[i] = data
+                break
+        else:
+            if len(top_stocks) >= 4:
+                top_stocks.pop(0)  # Remove oldest if we already have 4
+            top_stocks.append(data)
+        
+        # Increment notification counter to trigger UI update
+        global notification_count
+        notification_count += 1
+        
+@sio.on('top_stocks_update')
+def on_top_stocks_update(data):
+    print(f"Received top stocks update: {data}")
+    global top_stocks, notification_count
+    
+    # Update our list of top stocks
+    if isinstance(data, list) and len(data) > 0:
+        top_stocks = data
+        notification_count += 1
+
 # Socket.IO connection thread
 def socketio_thread():
     while True:
         try:
             if not sio.connected:
-                sio.connect('http://localhost:8001')
+                print("Trying to connect to Socket.IO server...")
+                # Try to connect to the socket server
+                sio.connect('http://localhost:8001', transports=['websocket', 'polling'])
             time.sleep(5)
         except Exception as e:
             print(f"Socket.IO connection error: {str(e)}")
@@ -43,6 +87,97 @@ st.markdown("""
 # 📈 Stock Analysis & Prediction
 ### Using ML, Technical Indicators & Trading Signals
 """)
+
+# Add custom CSS for notification bar
+st.markdown("""
+<style>
+.notification-bar {
+    background-color: #1E1E1E;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.stock-ticker {
+    display: inline-block;
+    margin-right: 20px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: #2D2D2D;
+}
+.stock-ticker.buy {
+    border-left: 4px solid green;
+}
+.stock-ticker.sell {
+    border-left: 4px solid red;
+}
+.stock-ticker.neutral {
+    border-left: 4px solid gray;
+}
+.positive {
+    color: green;
+}
+.negative {
+    color: red;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Add auto-refresh for the page
+st.markdown("""
+<meta http-equiv="refresh" content="15">
+""", unsafe_allow_html=True)
+
+# Real-time stock notification bar
+notification_container = st.container()
+
+with notification_container:
+    # Increment notification counter to rerun this section when data changes
+    if 'last_notification_count' not in st.session_state:
+        st.session_state.last_notification_count = 0
+        
+    # Check if we need to update the display
+    if notification_count > st.session_state.last_notification_count:
+        st.session_state.last_notification_count = notification_count
+    
+    st.subheader("🔔 Real-time Market Movers")
+    
+    # Create notification bar
+    if not top_stocks:
+        st.info("Waiting for real-time stock data...")
+    else:
+        # Create a horizontal scrollable container with stock tickers
+        notification_html = '<div class="notification-bar">'
+        
+        for stock in top_stocks:
+            # Determine signal class and styling
+            signal_class = "neutral"
+            if stock['signal'] == 'BUY':
+                signal_class = "buy"
+            elif stock['signal'] == 'SELL':
+                signal_class = "sell"
+                
+            # Determine change styling
+            change_class = "positive" if stock.get('change_percent', 0) >= 0 else "negative"
+            change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+            
+            # Add ticker to notification bar
+            notification_html += f'''
+            <div class="stock-ticker {signal_class}">
+                <strong>{stock['ticker']}</strong>: ${stock.get('price', 0):.2f} 
+                <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
+                <br/><small>Signal: {stock['signal']}</small>
+            </div>
+            '''
+            
+        notification_html += '</div>'
+        st.markdown(notification_html, unsafe_allow_html=True)
+        
+        # Small note about auto-updates
+        update_time = datetime.datetime.now().strftime("%H:%M:%S")
+        st.caption(f"Last updated: {update_time} (refreshes every 10 seconds)")
 
 # Sidebar for user inputs
 with st.sidebar:
