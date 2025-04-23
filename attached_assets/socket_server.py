@@ -35,7 +35,7 @@ def fetch_stock_data():
     top_stocks = ['AAPL', 'MSFT', 'AMZN', 'GOOGL']
     while True:
         try:
-            logger.info("Fetching stock updates...")
+            print("Fetching stock updates...")
             updated_stocks = []
             current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
