@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>📈 Real-Time Stock Tracker</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        .stock-box {
+            border: 2px solid #00ffcc;
+            padding: 30px;
+            margin: auto;
+            width: 300px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px #00ffcc;
+            font-size: 1.5em;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px #00ffcc;
+            }
+
+            to {
+                box-shadow: 0 0 20px #00ffff;
+            }
+        }
+
+        .label {
+            color: #aaa;
+        }
+
+        input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 150px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #00ffcc;
+            color: white;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #00cc99;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📈 Real-Time Stock Price Tracker</h1>
+
+    <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol" />
+    <button onclick="changeStock()">Track Stock</button>
+
+    <div class="stock-box" id="stock">
+        <div><span class="label">Price:</span> <span id="price">--</span> USD</div>
+        <div><span class="label">Open:</span> <span id="open">--</span> USD</div>
+        <div><span class="label">Volume:</span> <span id="volume">--</span></div>
+        <div><span class="label">Updated:</span> <span id="updated">--</span></div>
+    </div>
+
+    <script>
+        let ws;
+
+        // Open WebSocket
+        function openWebSocket(symbol) {
+            ws = new WebSocket(`ws://localhost:8000/ws?symbol=${symbol}`);
+
+            ws.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                document.getElementById("price").textContent = data.price;
+                document.getElementById("open").textContent = data.open;
+                document.getElementById("volume").textContent = data.volume;
+                document.getElementById("updated").textContent = new Date().toLocaleTimeString();
+            };
+
+            ws.onopen = function () {
+                document.getElementById("status").textContent = "✅ Connected. Receiving data...";
+            };
+
+            ws.onclose = function () {
+                document.getElementById("status").textContent = "❌ Disconnected from server.";
+            };
+        }
+
+        // Change stock based on user input
+        function changeStock() {
+            const symbol = document.getElementById("stockSymbol").value.toUpperCase();
+            if (symbol && ws) {
+                ws.close();  // Close the previous connection
+            }
+            if (symbol) {
+                openWebSocket(symbol);  // Start new WebSocket with new symbol
+            }
+        }
+    </script>
+</body>
+
+</html>
