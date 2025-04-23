@@ -36,7 +36,7 @@ def fetch_stock_data():
     while True:
         try:
             updated_stocks = []
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
+            current_time = datetime.datetime.now().astimezone().strftime("%I:%M:%S %p")
             for ticker in top_stocks:
                 try:
                     stock = yf.Ticker(ticker)

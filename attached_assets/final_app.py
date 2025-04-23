@@ -75,8 +75,14 @@ def socketio_thread():
             time.sleep(5)
 
 # Start the WebSocket thread when the app loads
-if not sio.connected:
-    threading.Thread(target=socketio_thread, daemon=True).start()
+# Start socket thread
+if 'socket_thread' not in st.session_state:
+    st.session_state.socket_thread = threading.Thread(target=socketio_thread, daemon=True)
+    st.session_state.socket_thread.start()
+
+# Force rerun every 10 seconds to update UI
+time.sleep(10)
+st.rerun()
 
 # Cache the analysis function to improve performance
 @st.cache_data(ttl=3600)  # Cache for 1 hour
