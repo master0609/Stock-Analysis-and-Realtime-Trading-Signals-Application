@@ -1,3 +1,4 @@
+
 import socketio
 import eventlet
 from flask import Flask
@@ -5,6 +6,7 @@ import datetime
 import time
 import threading
 from threading import Lock
+import yfinance as yf
 
 app = Flask(__name__)
 sio = socketio.Server(cors_allowed_origins='*', async_mode='eventlet')
@@ -12,21 +14,14 @@ app = socketio.WSGIApp(sio, app)
 
 connected_clients = {}
 data_lock = Lock()
-latest_stock_data = {
-    'ticker': '',
-    'price': 0.0,
-    'signal': 'NEUTRAL',
-    'change_percent': 0.0,
-    'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    'sequence': 0
-}
+latest_stock_data = {}
 
 @sio.event
 def connect(sid, environ):
     print(f"Client connected: {sid}")
     with data_lock:
         connected_clients[sid] = {'connected_at': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-    if latest_stock_data['ticker']:
+    if latest_stock_data:
         sio.emit('stock_update', latest_stock_data, to=sid)
 
 @sio.event
@@ -36,43 +31,48 @@ def disconnect(sid):
         if sid in connected_clients:
             del connected_clients[sid]
 
-def update_stock_data(ticker, price, signal, change_percent):
-    global latest_stock_data
-    with data_lock:
-        latest_stock_data = {
-            'ticker': ticker,
-            'price': price,
-            'signal': signal,
-            'change_percent': change_percent,
-            'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'sequence': time.time()
-        }
-    sio.emit('stock_update', latest_stock_data)
-
-@sio.on('stock_update')
-def handle_stock_update(sid, data):
-    try:
-        update_stock_data(
-            data['ticker'],
-            data['price'],
-            data['signal'],
-            data['change_percent']
-        )
-    except Exception as e:
-        print(f"Error handling stock update: {str(e)}")
-
-def broadcast_thread():
+def fetch_stock_data():
+    top_stocks = ['AAPL', 'MSFT', 'AMZN', 'GOOGL']
     while True:
         try:
-            with data_lock:
-                if latest_stock_data['ticker']:
-                    sio.emit('stock_update', latest_stock_data)
-            time.sleep(10)
+            updated_stocks = []
+            for ticker in top_stocks:
+                try:
+                    stock = yf.Ticker(ticker)
+                    data = stock.history(period="1d")
+                    if not data.empty:
+                        current_price = float(data['Close'].iloc[-1])
+                        open_price = float(data['Open'].iloc[-1])
+                        change_percent = ((current_price - open_price) / open_price) * 100
+                        
+                        signal = 'NEUTRAL'
+                        if change_percent > 1.5:
+                            signal = 'BUY'
+                        elif change_percent < -1.5:
+                            signal = 'SELL'
+                        
+                        stock_data = {
+                            'ticker': ticker,
+                            'price': current_price,
+                            'signal': signal,
+                            'change_percent': round(change_percent, 2),
+                            'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        }
+                        
+                        with data_lock:
+                            latest_stock_data[ticker] = stock_data
+                        updated_stocks.append(stock_data)
+                except Exception as e:
+                    print(f"Error fetching data for {ticker}: {str(e)}")
+            
+            if updated_stocks:
+                sio.emit('top_stocks_update', updated_stocks)
         except Exception as e:
-            print(f"Broadcast error: {str(e)}")
-            time.sleep(10)
+            print(f"Error in stock update thread: {str(e)}")
+        time.sleep(10)
 
-if __name__ == '__main__':
-    threading.Thread(target=broadcast_thread, daemon=True).start()
-    print("Starting Socket.IO server...")
-    eventlet.wsgi.server(eventlet.listen(('', 8001)), app)
+if __name__ == "__main__":
+    # Start the stock data thread
+    threading.Thread(target=fetch_stock_data, daemon=True).start()
+    # Run the server on 0.0.0.0 to make it accessible
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8001)), app)

@@ -9,7 +9,7 @@ deploymentTarget = "autoscale"
 run = ["streamlit", "run", "app.py", "--server.port", "5000"]
 
 [workflows]
-runButton = "Project"
+runButton = "StockApp"
 
 [[workflows.workflow]]
 name = "Project"
@@ -53,6 +53,19 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "cd server/websocket && python stock_socket_server.py"
 waitForPort = 8001
+
+[[workflows.workflow]]
+name = "StockApp"
+author = 41840654
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python attached_assets/socket_server.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run attached_assets/final_app.py --server.port 5000"
 
 [[ports]]
 localPort = 5000
