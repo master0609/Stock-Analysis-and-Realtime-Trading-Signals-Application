@@ -172,77 +172,61 @@ st.markdown("""
 # Do not auto-refresh the entire page
 # We'll use socket.io to update just the notification bar
 
-# Store stock updates in session state for persistence
+# Create hardcoded stocks for demonstration (in case WebSocket doesn't connect in time)
+demo_stocks = [
+    {"ticker": "AAPL", "price": 204.60, "signal": "NEUTRAL", "change_percent": -0.68},
+    {"ticker": "MSFT", "price": 374.39, "signal": "NEUTRAL", "change_percent": -0.51},
+    {"ticker": "AMZN", "price": 180.60, "signal": "SELL", "change_percent": -1.55},
+    {"ticker": "GOOGL", "price": 155.35, "signal": "NEUTRAL", "change_percent": -0.17}
+]
+
+# Initialize session state for top_stocks if it doesn't exist
 if 'top_stocks' not in st.session_state:
-    st.session_state.top_stocks = []
+    st.session_state.top_stocks = demo_stocks
     
-# Update session_state when we receive new data via WebSocket
-if top_stocks:
+# Update session state if we have data from WebSocket
+if top_stocks and len(top_stocks) > 0:
     st.session_state.top_stocks = top_stocks
     
 # Real-time stock notification bar (use session state for rendering)
 st.subheader("🔔 Real-time Market Movers")
 
-# Enable auto-refresh using JavaScript
-st.markdown("""
-<script>
-    // Auto-refresh the notification bar without reloading the whole page
-    const refreshNotifications = () => {
-        const container = window.parent.document.querySelector('[data-testid="stNotificationContainer"]');
-        if (container) {
-            // Trigger a click on the last control in the container to refresh
-            const buttons = container.querySelectorAll('button');
-            if (buttons.length > 0) {
-                buttons[buttons.length - 1].click();
-            }
-        }
-    };
-    
-    // Refresh every 5 seconds
-    setInterval(refreshNotifications, 5000);
-</script>
-""", unsafe_allow_html=True)
+# Create notification bar with the current stocks
+notification_html = '<div class="notification-bar">'
 
-# Create notification bar
-if not st.session_state.top_stocks:
-    st.info("Waiting for real-time stock data...")
-else:
-    # Create a horizontal scrollable container with stock tickers
-    notification_html = '<div class="notification-bar">'
-    
-    for stock in st.session_state.top_stocks:
-        # Determine signal class and styling
-        signal_class = "neutral"
-        if stock['signal'] == 'BUY':
-            signal_class = "buy"
-        elif stock['signal'] == 'SELL':
-            signal_class = "sell"
-            
-        # Determine change styling
-        change_class = "positive" if stock.get('change_percent', 0) >= 0 else "negative"
-        change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+for stock in st.session_state.top_stocks:
+    # Determine signal class and styling
+    signal_class = "neutral"
+    if stock['signal'] == 'BUY':
+        signal_class = "buy"
+    elif stock['signal'] == 'SELL':
+        signal_class = "sell"
         
-        # Add ticker to notification bar
-        notification_html += f'''
-        <div class="stock-ticker {signal_class}">
-            <div class="ticker-name">{stock['ticker']}</div>
-            <div class="ticker-price">${stock.get('price', 0):.2f} 
-                <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
-            </div>
-            <div class="ticker-signal">Signal: {stock['signal']}</div>
+    # Determine change styling
+    change_class = "positive" if stock.get('change_percent', 0) >= 0 else "negative"
+    change_symbol = "+" if stock.get('change_percent', 0) >= 0 else ""
+    
+    # Add ticker to notification bar
+    notification_html += f'''
+    <div class="stock-ticker {signal_class}">
+        <div class="ticker-name">{stock['ticker']}</div>
+        <div class="ticker-price">${stock.get('price', 0):.2f} 
+            <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
         </div>
-        '''
-        
-    notification_html += '</div>'
-    st.markdown(notification_html, unsafe_allow_html=True)
+        <div class="ticker-signal">Signal: {stock['signal']}</div>
+    </div>
+    '''
     
-    # Small note about auto-updates
-    update_time = datetime.datetime.now().strftime("%H:%M:%S")
-    st.caption(f"Last updated: {update_time} (refreshes every 10 seconds)")
-    
-    # Add a refresh button for manual refresh
-    if st.button("Refresh Stocks"):
-        st.rerun()
+notification_html += '</div>'
+st.markdown(notification_html, unsafe_allow_html=True)
+
+# Small note about auto-updates
+update_time = datetime.datetime.now().strftime("%H:%M:%S")
+st.caption(f"Last updated: {update_time} (refreshes every 10 seconds)")
+
+# Add a refresh button for manual refresh
+if st.button("Refresh Stocks", key="manual_refresh"):
+    st.rerun()
 
 # Sidebar for user inputs
 with st.sidebar:
