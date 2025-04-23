@@ -8,6 +8,7 @@ import socketio
 import threading
 import time
 import json
+from login import login_page, logout
 
 # Initialize Socket.IO client with client transport
 sio = socketio.Client(logger=True, engineio_logger=True)
@@ -81,6 +82,18 @@ if not sio.connected:
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_stock_analysis(ticker, start_date, end_date, lookback_period):
     return analyze_stock(ticker, start_date, end_date, lookback_period)
+
+# First, check if user is authenticated
+if not login_page():
+    # Exit here if not logged in
+    st.stop()
+
+# User is authenticated, show logout button in the sidebar
+with st.sidebar:
+    st.write(f"👤 Logged in as: **{st.session_state['username']}**")
+    if st.button("Logout"):
+        logout()
+        st.rerun()
 
 # Apply custom styling
 st.markdown("""
@@ -180,13 +193,38 @@ demo_stocks = [
     {"ticker": "GOOGL", "price": 155.35, "signal": "NEUTRAL", "change_percent": -0.17}
 ]
 
-# Initialize session state for top_stocks if it doesn't exist
+# Initialize session state variables if they don't exist
 if 'top_stocks' not in st.session_state:
     st.session_state.top_stocks = demo_stocks
     
+if 'notification_count' not in st.session_state:
+    st.session_state.notification_count = 0
+    
+if 'last_update_time' not in st.session_state:
+    st.session_state.last_update_time = datetime.datetime.now()
+    
 # Update session state if we have data from WebSocket
 if top_stocks and len(top_stocks) > 0:
-    st.session_state.top_stocks = top_stocks
+    # Check if this is new data (compare timestamps if available)
+    should_update = False
+    
+    if 'timestamp' in top_stocks[0] and st.session_state.top_stocks and 'timestamp' in st.session_state.top_stocks[0]:
+        # Check if the timestamp has changed
+        if top_stocks[0]['timestamp'] != st.session_state.top_stocks[0]['timestamp']:
+            should_update = True
+    else:
+        # If no timestamp, check if any values have changed or it's been 10 seconds since last update
+        current_time = datetime.datetime.now()
+        if (current_time - st.session_state.last_update_time).total_seconds() >= 9:
+            should_update = True
+    
+    if should_update:
+        st.session_state.top_stocks = top_stocks
+        st.session_state.notification_count += 1
+        st.session_state.last_update_time = datetime.datetime.now()
+        
+        # Trigger a refresh to show new data
+        st.rerun()
     
 # Real-time stock notification bar (use session state for rendering)
 st.subheader("🔔 Real-time Market Movers")
