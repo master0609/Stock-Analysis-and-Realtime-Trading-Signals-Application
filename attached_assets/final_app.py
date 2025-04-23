@@ -68,8 +68,8 @@ def socketio_thread():
             if not sio.connected:
                 print("Trying to connect to Socket.IO server...")
                 # Try to connect to the socket server
-                sio.connect('http://0.0.0.0:8001', transports=['websocket', 'polling'])
-            time.sleep(10)
+                sio.connect('http://0.0.0.0:8001')
+            time.sleep(5)
         except Exception as e:
             print(f"Socket.IO connection error: {str(e)}")
             time.sleep(5)
