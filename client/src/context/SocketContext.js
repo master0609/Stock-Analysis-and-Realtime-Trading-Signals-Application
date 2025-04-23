@@ -13,7 +13,7 @@ export function SocketProvider({ children }) {
   
   useEffect(() => {
     // Create socket connection
-    const newSocket = io('http://localhost:8000', {
+    const newSocket = io('http://0.0.0.0:8001', {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 10,

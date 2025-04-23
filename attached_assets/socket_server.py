@@ -8,7 +8,7 @@ from threading import Lock
 import yfinance as yf
 
 app = Flask(__name__)
-sio = socketio.Server(cors_allowed_origins='*', async_mode='eventlet')
+sio = socketio.Server(cors_allowed_origins=['*', 'http://0.0.0.0:5000'], async_mode='eventlet')
 app = socketio.WSGIApp(sio, app)
 
 connected_clients = {}
