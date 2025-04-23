@@ -584,11 +584,7 @@ if analyze_button:
                     
                     st.table(metrics_df.set_index('Metric'))
                     
-                    # Display model information
-                    st.subheader("Model Information")
-                    st.write("**Model Type:** Random Forest Regressor")
-                    st.write("**Features:** Historical prices plus technical indicators")
-                    st.write(f"**Lookback Period:** {lookback_period} days")
+                    
                 
                 with tab3:
                     st.subheader("Technical Indicators")
