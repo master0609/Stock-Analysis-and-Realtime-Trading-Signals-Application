@@ -1,4 +1,3 @@
-
 import socketio
 import eventlet
 from flask import Flask
@@ -32,41 +31,41 @@ def disconnect(sid):
             del connected_clients[sid]
 
 def fetch_stock_data():
+    """Fetch real-time stock data from Yahoo Finance API"""
     top_stocks = ['AAPL', 'MSFT', 'AMZN', 'GOOGL']
     while True:
         try:
+            logger.info("Fetching stock updates...")
             updated_stocks = []
             current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
             for ticker in top_stocks:
                 try:
+                    # Get real data from Yahoo Finance
                     stock = yf.Ticker(ticker)
                     data = stock.history(period="1d", interval="1m")
                     if not data.empty:
                         current_price = float(data['Close'].iloc[-1])
                         open_price = float(data['Open'].iloc[0])
                         change_percent = ((current_price - open_price) / open_price) * 100
-                        
+
                         signal = 'NEUTRAL'
                         if change_percent > 1.5:
                             signal = 'BUY'
                         elif change_percent < -1.5:
                             signal = 'SELL'
-                        
+
                         stock_data = {
                             'ticker': ticker,
                             'price': round(current_price, 2),
                             'signal': signal,
                             'change_percent': round(change_percent, 2),
-                            'timestamp': current_time,
-                            'server_time': current_time
+                            'timestamp': current_time
                         }
-                        
-                        with data_lock:
-                            latest_stock_data[ticker] = stock_data
                         updated_stocks.append(stock_data)
                 except Exception as e:
                     print(f"Error fetching data for {ticker}: {str(e)}")
-            
+
             if updated_stocks:
                 sio.emit('top_stocks_update', updated_stocks)
         except Exception as e:

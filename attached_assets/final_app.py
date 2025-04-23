@@ -56,9 +56,23 @@ def on_top_stocks_update(data):
     print(f"Received top stocks update: {data}")
     global top_stocks, notification_count
     
-    # Update our list of top stocks
+    # Update our list of top stocks without affecting analysis
     if isinstance(data, list) and len(data) > 0:
-        top_stocks = data
+        # Only update price and signal info
+        for new_stock in data:
+            for i, existing_stock in enumerate(top_stocks):
+                if existing_stock['ticker'] == new_stock['ticker']:
+                    top_stocks[i].update({
+                        'price': new_stock['price'],
+                        'signal': new_stock['signal'],
+                        'change_percent': new_stock['change_percent'],
+                        'timestamp': new_stock['timestamp']
+                    })
+                    break
+            else:
+                if len(top_stocks) >= 4:
+                    top_stocks.pop(0)
+                top_stocks.append(new_stock)
         notification_count += 1
 
 # Socket.IO connection thread
