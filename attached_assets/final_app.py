@@ -205,26 +205,13 @@ if 'last_update_time' not in st.session_state:
     
 # Update session state if we have data from WebSocket
 if top_stocks and len(top_stocks) > 0:
-    # Check if this is new data (compare timestamps if available)
-    should_update = False
+    # Always update when new data arrives - we're going to force a rerun
+    st.session_state.top_stocks = top_stocks
+    st.session_state.notification_count += 1
+    st.session_state.last_update_time = datetime.datetime.now()
     
-    if 'timestamp' in top_stocks[0] and st.session_state.top_stocks and 'timestamp' in st.session_state.top_stocks[0]:
-        # Check if the timestamp has changed
-        if top_stocks[0]['timestamp'] != st.session_state.top_stocks[0]['timestamp']:
-            should_update = True
-    else:
-        # If no timestamp, check if any values have changed or it's been 10 seconds since last update
-        current_time = datetime.datetime.now()
-        if (current_time - st.session_state.last_update_time).total_seconds() >= 9:
-            should_update = True
-    
-    if should_update:
-        st.session_state.top_stocks = top_stocks
-        st.session_state.notification_count += 1
-        st.session_state.last_update_time = datetime.datetime.now()
-        
-        # Trigger a refresh to show new data
-        st.rerun()
+    # ALWAYS rerun when new data is received
+    st.rerun()
     
 # Real-time stock notification bar (use session state for rendering)
 st.subheader("🔔 Real-time Market Movers")
