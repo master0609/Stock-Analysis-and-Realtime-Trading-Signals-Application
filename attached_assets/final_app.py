@@ -243,8 +243,39 @@ if st.session_state.top_stocks and 'timestamp' in st.session_state.top_stocks[0]
 else:
     update_time = datetime.datetime.now().strftime("%H:%M:%S")
 
-# Display update timestamp prominently at the top
-st.markdown(f"<div style='text-align:right; color:#666; margin-bottom:10px;'>Last updated: <b>{update_time}</b></div>", unsafe_allow_html=True)
+# Display update timestamp prominently at the top with animation when it changes
+if 'previous_update_time' not in st.session_state:
+    st.session_state.previous_update_time = update_time
+
+if st.session_state.previous_update_time != update_time:
+    # Animation effect for new updates
+    st.markdown(f"""
+    <div style='text-align:right; margin-bottom:10px;'>
+        <div style='display:inline-block; padding:5px 10px; background-color:#2a9d8f; color:white; 
+                  border-radius:4px; font-weight:bold; animation:pulse 2s infinite;'>
+            ⟳ Last updated: {update_time}
+        </div>
+    </div>
+    <style>
+    @keyframes pulse {{
+        0% {{ opacity: 1; transform: scale(1); }}
+        50% {{ opacity: 0.8; transform: scale(1.05); }}
+        100% {{ opacity: 1; transform: scale(1); }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Update previous time for next comparison
+    st.session_state.previous_update_time = update_time
+else:
+    st.markdown(f"""
+    <div style='text-align:right; margin-bottom:10px;'>
+        <div style='display:inline-block; padding:5px 10px; background-color:#444; color:white; 
+                  border-radius:4px;'>
+            ⟳ Last updated: {update_time}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Use Streamlit's built-in UI components for reliable rendering
 col1, col2, col3, col4 = st.columns(4)
