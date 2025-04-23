@@ -36,13 +36,14 @@ def fetch_stock_data():
     while True:
         try:
             updated_stocks = []
+            current_time = datetime.datetime.now().strftime("%H:%M:%S")
             for ticker in top_stocks:
                 try:
                     stock = yf.Ticker(ticker)
-                    data = stock.history(period="1d")
+                    data = stock.history(period="1d", interval="1m")
                     if not data.empty:
                         current_price = float(data['Close'].iloc[-1])
-                        open_price = float(data['Open'].iloc[-1])
+                        open_price = float(data['Open'].iloc[0])
                         change_percent = ((current_price - open_price) / open_price) * 100
                         
                         signal = 'NEUTRAL'
@@ -53,10 +54,11 @@ def fetch_stock_data():
                         
                         stock_data = {
                             'ticker': ticker,
-                            'price': current_price,
+                            'price': round(current_price, 2),
                             'signal': signal,
                             'change_percent': round(change_percent, 2),
-                            'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            'timestamp': current_time,
+                            'server_time': current_time
                         }
                         
                         with data_lock:

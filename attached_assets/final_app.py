@@ -11,7 +11,7 @@ import json
 from login import login_page, logout
 
 # Initialize Socket.IO client with client transport
-sio = socketio.Client(logger=True, engineio_logger=True)
+sio = socketio.Client(logger=True, engineio_logger=True, reconnection=True, reconnection_attempts=10, reconnection_delay=1)
 
 # Global variables for stock notifications
 top_stocks = []
@@ -217,16 +217,10 @@ if top_stocks and len(top_stocks) > 0:
 st.subheader("🔔 Real-time Market Movers")
 
 # Extract timestamp from the most recent stock data
-if st.session_state.top_stocks and 'timestamp' in st.session_state.top_stocks[0]:
-    update_time = st.session_state.top_stocks[0]['timestamp']
-    # Format it if it's a full datetime string 
-    if len(update_time) > 8:  # Check if it's more than just HH:MM:SS
-        try:
-            dt = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
-            update_time = dt.strftime("%H:%M:%S")
-        except:
-            # If parsing fails, just use the time as is
-            pass
+# Get the latest update time from the socket data
+if st.session_state.top_stocks and isinstance(st.session_state.top_stocks[0], dict):
+    latest_stock = st.session_state.top_stocks[0]
+    update_time = latest_stock.get('server_time', datetime.datetime.now().strftime("%H:%M:%S"))
 else:
     update_time = datetime.datetime.now().strftime("%H:%M:%S")
 
