@@ -99,43 +99,10 @@ function PricePrediction({ data }) {
   
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="col-span-2">
-          <h3 className="text-lg font-semibold mb-3">ML Price Prediction</h3>
-          <div className="bg-gray-50 p-2 rounded-lg" style={{ height: '400px' }}>
-            <canvas ref={chartRef}></canvas>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Model Metrics</h3>
-          <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col justify-between">
-            <div>
-              <h4 className="text-md font-medium mb-2">Accuracy</h4>
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                <div 
-                  className={`h-4 rounded-full ${
-                    accuracyCapped >= 90 ? 'bg-green-600' :
-                    accuracyCapped >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${accuracyCapped}%` }}
-                ></div>
-              </div>
-              <p className="text-center font-bold text-lg">{accuracyCapped.toFixed(1)}%</p>
-            </div>
-            
-            <div className="mt-6">
-              <h4 className="text-md font-medium mb-2">Error Metrics</h4>
-              <div className="space-y-2 text-sm">
-                {Object.entries(data.accuracy_metrics).map(([key, value]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-gray-600">{key}:</span>
-                    <span className="font-semibold">{typeof value === 'number' ? value.toFixed(4) : value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">ML Price Prediction</h3>
+        <div className="bg-gray-50 p-2 rounded-lg" style={{ height: '400px' }}>
+          <canvas ref={chartRef}></canvas>
         </div>
       </div>
       
