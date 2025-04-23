@@ -94,41 +94,83 @@ st.markdown("""
 .notification-bar {
     background-color: #1E1E1E;
     color: white;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 8px;
     margin-bottom: 20px;
     overflow-x: auto;
     white-space: nowrap;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    animation: fadeIn 0.5s;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .stock-ticker {
     display: inline-block;
     margin-right: 20px;
-    padding: 8px 15px;
-    border-radius: 5px;
+    padding: 10px 18px;
+    border-radius: 6px;
     background-color: #2D2D2D;
+    min-width: 150px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
 }
+
+.stock-ticker:hover {
+    transform: translateY(-3px);
+}
+
 .stock-ticker.buy {
-    border-left: 4px solid green;
+    border-left: 6px solid #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
 }
+
 .stock-ticker.sell {
-    border-left: 4px solid red;
+    border-left: 6px solid #F44336;
+    background-color: rgba(244, 67, 54, 0.1);
 }
+
 .stock-ticker.neutral {
-    border-left: 4px solid gray;
+    border-left: 6px solid #9E9E9E;
 }
+
 .positive {
-    color: green;
+    color: #4CAF50;
+    font-weight: bold;
 }
+
 .negative {
-    color: red;
+    color: #F44336;
+    font-weight: bold;
+}
+
+.ticker-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.ticker-price {
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.ticker-signal {
+    font-size: 12px;
+    opacity: 0.8;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Add auto-refresh for the page
-st.markdown("""
-<meta http-equiv="refresh" content="15">
-""", unsafe_allow_html=True)
+# Do not auto-refresh the entire page
+# We'll use socket.io to update just the notification bar
 
 # Store stock updates in session state for persistence
 if 'top_stocks' not in st.session_state:
@@ -183,9 +225,11 @@ else:
         # Add ticker to notification bar
         notification_html += f'''
         <div class="stock-ticker {signal_class}">
-            <strong>{stock['ticker']}</strong>: ${stock.get('price', 0):.2f} 
-            <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
-            <br/><small>Signal: {stock['signal']}</small>
+            <div class="ticker-name">{stock['ticker']}</div>
+            <div class="ticker-price">${stock.get('price', 0):.2f} 
+                <span class="{change_class}">{change_symbol}{stock.get('change_percent', 0):.2f}%</span>
+            </div>
+            <div class="ticker-signal">Signal: {stock['signal']}</div>
         </div>
         '''
         
