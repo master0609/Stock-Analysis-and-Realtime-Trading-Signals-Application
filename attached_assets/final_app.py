@@ -10,8 +10,8 @@ import time
 import json
 from login import login_page, logout
 
-# Initialize Socket.IO client with client transport
-sio = socketio.Client(logger=True, engineio_logger=True, reconnection=True, reconnection_attempts=10, reconnection_delay=1)
+# Initialize Socket.IO client
+sio = socketio.Client(logger=True, engineio_logger=True)
 
 # Global variables for stock notifications
 top_stocks = []
@@ -81,14 +81,7 @@ def socketio_thread():
         try:
             if not sio.connected:
                 print("Trying to connect to Socket.IO server...")
-                # Try to connect to the socket server with more stable settings
-                sio.connect('http://0.0.0.0:8001', 
-                    wait_timeout=60,
-                    transports=['websocket'],
-                    reconnection=True,
-                    reconnection_attempts=10,
-                    reconnection_delay=1,
-                    reconnection_delay_max=5)
+                sio.connect('http://0.0.0.0:8001', transports=['websocket'])
             time.sleep(10)
         except Exception as e:
             print(f"Socket.IO connection error: {str(e)}")
